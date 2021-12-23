@@ -20,12 +20,7 @@ export function authReducer(state, action) {
 			};
 		}
 		case authActions.LOGOUT: {
-			return {
-				...state,
-				me: null,
-			};
-		}
-		case authActions.RESET: {
+			localStorage.removeItem('adminToken');
 			return {
 				...initialState,
 			};

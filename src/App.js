@@ -1,17 +1,17 @@
-import { useMutation } from '@apollo/client';
-import React, { useRef, useState, useEffect, useContext } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import './App.css';
 import { withAuthContext } from './context';
 import { authActions } from './context/auth';
-import { authQueries } from './graphql';
 
 function App(props) {
-  // context store...
-	const { store, dispatch } = props;
+	// context store...
+	const { store, dispatch, login, logout, loggedIn } = props;
 
 	const [loading, setLoading] = useState(false);
+	const [message, setMessage] = useState(null);
 
 	const loginRef = useRef(null);
+
 	const onSubmitHandler = (ev) => {
 		if (ev) ev.preventDefault();
 
@@ -32,11 +32,34 @@ function App(props) {
 		}, 2000);
 	};
 
-	const [login] = useMutation(authQueries.LOGIN);
+	const onLogout = (ev) => {
+		if (ev) ev.preventDefault();
+
+		setLoading(true);
+
+		setTimeout(() => {
+			logout()
+				.then(({ data }) => {
+					dispatch({ type: authActions.LOGOUT });
+					setMessage(data.data);
+				})
+				.catch(({ message }) => console.log('err => ', message))
+				.finally(() => setLoading(false));
+		}, 2000);
+	};
 
 	useEffect(() => {
-		console.log(store);
-	}, [store.me]);
+		if (!store.me && localStorage.getItem('adminToken')) {
+			setLoading(true);
+
+			loggedIn()
+				.then(({ data }) => {
+					dispatch({ type: authActions.LOGGED_IN, payload: data.data });
+				})
+				.catch(({ message }) => console.log('error ==>', message))
+				.finally(() => setLoading(false));
+		}
+	}, [store, store.me, dispatch, loggedIn]);
 	return (
 		<>
 			<form ref={loginRef} onSubmit={onSubmitHandler}>
@@ -44,7 +67,11 @@ function App(props) {
 				<input type='password' name='password' disabled={loading} />
 				<input type='submit' value='Login' disabled={loading} />
 			</form>
-			{loading ? <h1>loading...</h1> : ''}
+			<button type='button' onClick={onLogout}>
+				Logout
+			</button>
+			<hr />
+			{loading ? <h1>loading...</h1> : store.me ? JSON.stringify(store.me, null, 3) : message}
 		</>
 	);
 }

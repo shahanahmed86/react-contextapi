@@ -1,4 +1,6 @@
+import { useLazyQuery, useMutation, } from '@apollo/client';
 import React, { createContext, useReducer } from 'react';
+import { authQueries } from '../../graphql';
 import { initialState as state, authReducer as reducer } from './reducer';
 export * as authActions from './actions';
 
@@ -9,11 +11,19 @@ export const withAuthContext = (Component) => (props) =>
 
 export function AuthProvider(props) {
 	const [store, dispatch] = useReducer(reducer, state);
+
+	// mutations
+	const [login] = useMutation(authQueries.LOGIN);
+	const [logout] = useMutation(authQueries.LOGOUT);
+	const [loggedIn] = useLazyQuery(authQueries.LOGGED_IN);
 	return (
 		<authContext.Provider
 			value={{
 				store,
 				dispatch,
+				login,
+				logout,
+				loggedIn,
 			}}
 		>
 			{props.children}
