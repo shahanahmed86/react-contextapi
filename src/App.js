@@ -5,7 +5,7 @@ import { authActions } from './context/auth';
 
 function App(props) {
 	// context store...
-	const { store, dispatch, login, logout, loggedIn } = props;
+	const { me, authDispatch, login, logout, loggedIn } = props;
 
 	const [loading, setLoading] = useState(false);
 	const [message, setMessage] = useState(null);
@@ -25,7 +25,7 @@ function App(props) {
 			};
 			login({ variables })
 				.then(({ data }) => {
-					dispatch({ type: authActions.LOGIN, payload: data.data });
+					authDispatch({ type: authActions.LOGIN, payload: data.data });
 				})
 				.catch(({ message }) => console.log('error ==>', message))
 				.finally(() => setLoading(false));
@@ -40,7 +40,7 @@ function App(props) {
 		setTimeout(() => {
 			logout()
 				.then(({ data }) => {
-					dispatch({ type: authActions.LOGOUT });
+					authDispatch({ type: authActions.LOGOUT });
 					setMessage(data.data);
 				})
 				.catch(({ message }) => console.log('err => ', message))
@@ -49,17 +49,17 @@ function App(props) {
 	};
 
 	useEffect(() => {
-		if (!store.me && localStorage.getItem('adminToken')) {
+		if (!me && localStorage.getItem('adminToken')) {
 			setLoading(true);
 
 			loggedIn()
 				.then(({ data }) => {
-					dispatch({ type: authActions.LOGGED_IN, payload: data.data });
+					authDispatch({ type: authActions.LOGGED_IN, payload: data.data });
 				})
 				.catch(({ message }) => console.log('error ==>', message))
 				.finally(() => setLoading(false));
 		}
-	}, [store, store.me, dispatch, loggedIn]);
+	}, [me, authDispatch, loggedIn]);
 	return (
 		<>
 			<form ref={loginRef} onSubmit={onSubmitHandler}>
@@ -71,7 +71,7 @@ function App(props) {
 				Logout
 			</button>
 			<hr />
-			{loading ? <h1>loading...</h1> : store.me ? JSON.stringify(store.me, null, 3) : message}
+			{loading ? <h1>loading...</h1> : me ? JSON.stringify(me, null, 3) : message}
 		</>
 	);
 }

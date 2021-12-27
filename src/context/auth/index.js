@@ -10,7 +10,7 @@ export const withAuthContext = (Component) => (props) =>
 	<authContext.Consumer>{(values) => <Component {...values} {...props} />}</authContext.Consumer>;
 
 export function AuthProvider(props) {
-	const [store, dispatch] = useReducer(reducer, state);
+	const [store, authDispatch] = useReducer(reducer, state);
 
 	// mutations
 	const [login] = useMutation(authQueries.LOGIN);
@@ -19,8 +19,8 @@ export function AuthProvider(props) {
 	return (
 		<authContext.Provider
 			value={{
-				store,
-				dispatch,
+				...store,
+				authDispatch,
 				login,
 				logout,
 				loggedIn,
