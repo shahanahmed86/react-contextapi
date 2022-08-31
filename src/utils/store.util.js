@@ -2,6 +2,10 @@ class Storage {
 	tokenKey = '@token';
 	storageKey = '@storage';
 
+	get isTokenExists() {
+		return !!this.getData(this.tokenKey);
+	}
+
 	setData = (key, payload, toJson = false) => {
 		try {
 			let data = payload;
@@ -10,6 +14,7 @@ class Storage {
 			return localStorage.setItem(key, data);
 		} catch (error) {
 			console.log('setData catch...', error);
+			return null;
 		}
 	};
 
@@ -21,6 +26,7 @@ class Storage {
 			return payload;
 		} catch (error) {
 			console.log('getData catch...', error);
+			return null;
 		}
 	};
 
@@ -29,6 +35,7 @@ class Storage {
 			return localStorage.removeItem(key);
 		} catch (error) {
 			console.log('removeData catch...', error);
+			return null;
 		}
 	};
 }

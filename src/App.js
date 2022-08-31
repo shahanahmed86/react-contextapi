@@ -1,31 +1,58 @@
 import React, { useContext, useEffect, useState } from 'react';
 import { Routes, Route, useNavigate } from 'react-router-dom';
 
-import { LoginPage } from './components/login.component';
-import { DashboardPage } from './components/dashboard.component';
-import { authContext } from './context';
+import { LoginPage } from './pages/login.page';
+import { DashboardPage } from './pages/dashboard.page';
+import { authActions, authContext } from './context';
 
-import './App.css';
+import storage from './utils/store.util';
+import { Loader } from './components/loader.component';
+import { useSubscription } from '@apollo/client';
+import { SESSION_EXPIRED } from './graphql/common.graphql';
+import { toast } from 'react-toastify';
 
 function App() {
-	const { loggedIn, isAuthenticated } = useContext(authContext);
-	const [loading, setLoading] = useState(true);
+	const { authDispatch, me, loggedIn, isAuthenticated, lastNavigatedScreen, authenticating } =
+		useContext(authContext);
+
+	useSubscription(SESSION_EXPIRED, {
+		skip: !storage.getData(storage.tokenKey),
+		variables: { token: storage.getData(storage.tokenKey) },
+		onSubscriptionData: (result) => {
+			const { success, message } = result.subscriptionData.data.data;
+
+			if (!success) {
+				authDispatch({ type: authActions.LOGOUT });
+				toast.error(message);
+			}
+		}
+	});
+
+	const [loading, setLoading] = useState(false);
 	const navigate = useNavigate();
 
 	useEffect(() => {
-		loggedIn().finally(() => setLoading(false));
-	}, [loggedIn, navigate]);
+		const storedData = storage.getData(storage.tokenKey);
+
+		if (!me && storedData) {
+			setLoading(true);
+			loggedIn().then(() => setLoading(false));
+		}
+	}, [loggedIn, me, authDispatch]);
 
 	useEffect(() => {
-		const route = isAuthenticated ? '/dashboard' : 'login';
-		navigate(route);
-	}, [isAuthenticated, navigate]);
+		if (authenticating) return;
 
-	if (loading) return <h4>loading...</h4>;
+		const route = isAuthenticated ? lastNavigatedScreen || '/dashboard' : 'login';
+		navigate(route);
+	}, [authenticating, isAuthenticated, navigate, lastNavigatedScreen]);
+
+	if (loading) return <Loader />;
 	return (
 		<Routes>
-			<Route path='/login' element={<LoginPage />} />
-			<Route path='/dashboard' element={<DashboardPage />} />
+			<Route path='/' element={<div />} />
+			<Route path='/login' exact element={<LoginPage />} />
+			<Route path='/dashboard' exact element={<DashboardPage />} />
 		</Routes>
 	);
 }
