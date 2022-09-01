@@ -1,6 +1,6 @@
 import { useLazyQuery, useMutation } from '@apollo/client';
 import React, { createContext, useReducer } from 'react';
-import { authQueries } from '../../graphql';
+import { adminAuthQueries, userAuthQueries } from '../../graphql';
 import { initialState, authReducer as reducer } from './reducer';
 import * as authActions from './actions';
 import { useNavigate } from 'react-router-dom';
@@ -15,9 +15,12 @@ export const AuthProvider = (props) => {
 
 	const [store, authDispatch] = useReducer(reducer, initialState);
 
-	const [login] = useMutation(authQueries.ADMIN_LOGIN, {
+	const [adminLogin] = useMutation(adminAuthQueries.ADMIN_LOGIN, {
 		onCompleted: (data) => {
-			authDispatch({ type: authActions.LOGIN, payload: data.data });
+			authDispatch({
+				type: authActions.LOGIN,
+				payload: Object.assign(data.data, { isAdmin: true })
+			});
 
 			const route = '/dashboard';
 			authDispatch({ type: authActions.NAVIGATE, payload: route });
@@ -30,7 +33,35 @@ export const AuthProvider = (props) => {
 		}
 	});
 
-	const [loggedIn] = useLazyQuery(authQueries.ADMIN_LOGGED_IN, {
+	const [userLogin] = useMutation(userAuthQueries.USER_LOGIN, {
+		onCompleted: (data) => {
+			authDispatch({
+				type: authActions.LOGIN,
+				payload: Object.assign(data.data, { isAdmin: false })
+			});
+
+			const route = '/dashboard';
+			authDispatch({ type: authActions.NAVIGATE, payload: route });
+			navigate(route);
+
+			toast.success("You've successfully logged in...");
+		},
+		onError: (err) => {
+			throw err;
+		}
+	});
+
+	const [adminLoggedIn] = useLazyQuery(adminAuthQueries.ADMIN_LOGGED_IN, {
+		onCompleted: (data) => {
+			authDispatch({ type: authActions.LOGGED_IN, payload: data.data });
+		},
+		onError: (err) => {
+			if (err.message.indexOf('jwt expired') !== -1) authDispatch({ type: authActions.LOGOUT });
+			console.log('err.message...', err.message);
+		}
+	});
+
+	const [userLoggedIn] = useLazyQuery(userAuthQueries.USER_LOGGED_IN, {
 		onCompleted: (data) => {
 			authDispatch({ type: authActions.LOGGED_IN, payload: data.data });
 		},
@@ -54,8 +85,10 @@ export const AuthProvider = (props) => {
 			value={{
 				...store,
 				authDispatch,
-				login,
-				loggedIn
+				adminLogin,
+				adminLoggedIn,
+				userLogin,
+				userLoggedIn
 			}}
 		>
 			{props.children}

@@ -1,26 +1,23 @@
 import { gql } from '@apollo/client';
+import { CORE_ADMIN_FIELDS } from './common.graphql';
 
 export const ADMIN_LOGIN = gql`
+	${CORE_ADMIN_FIELDS}
 	mutation AdminLogin($username: String!, $password: String!) {
 		data: adminLogin(username: $username, password: $password) {
 			token
 			payload {
-				id
-				username
-				createdAt
-				updatedAt
+				...CoreAdminFields
 			}
 		}
 	}
 `;
 
 export const ADMIN_LOGGED_IN = gql`
+	${CORE_ADMIN_FIELDS}
 	query AdminLoggedIn {
 		data: adminLoggedIn {
-			id
-			username
-			createdAt
-			updatedAt
+			...CoreAdminFields
 		}
 	}
 `;

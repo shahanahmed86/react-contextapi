@@ -6,7 +6,7 @@ class Storage {
 		return !!this.getData(this.tokenKey);
 	}
 
-	setData = (key, payload, toJson = false) => {
+	setData = (key, payload, toJson = true) => {
 		try {
 			let data = payload;
 			if (payload && toJson) data = JSON.stringify(payload);
@@ -18,7 +18,7 @@ class Storage {
 		}
 	};
 
-	getData = (key, toParse = false) => {
+	getData = (key, toParse = true) => {
 		try {
 			let payload = localStorage.getItem(key);
 			if (payload && toParse) payload = JSON.parse(payload);

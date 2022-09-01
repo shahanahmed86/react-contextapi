@@ -16,10 +16,16 @@ export function authReducer(state, action) {
 			};
 		}
 		case authActions.LOGIN: {
-			storage.setData(storage.tokenKey, action.payload.token);
+			storage.setData(
+				storage.tokenKey,
+				{
+					token: action.payload.token,
+					isAdmin: action.payload.isAdmin
+				},
+			);
 			return {
 				...state,
-				me: action.payload.admin,
+				me: action.payload.payload,
 				isAuthenticated: true,
 				authenticating: false
 			};

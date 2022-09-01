@@ -1,15 +1,21 @@
-import React, { useContext, useRef } from 'react';
+import React, { useContext, useRef, useState } from 'react';
 import { toast } from 'react-toastify';
-import { authActions, authContext } from '../context';
 import Box from '@mui/material/Box';
 import Paper from '@mui/material/Paper';
+import Button from '@mui/material/Button';
+import Switch from '@mui/material/Switch';
+
+import { authActions, authContext } from '../context';
 import { TextField } from '../components/text.component';
-import { Button } from '@mui/material';
+import { Typography } from '@mui/material';
 
 export function LoginPage() {
-	const { login, authDispatch, authenticating } = useContext(authContext);
-
 	const loginRef = useRef(null);
+	const { adminLogin, userLogin, authDispatch, authenticating } = useContext(authContext);
+
+	const [isAdmin, setIsAdmin] = useState(false);
+
+	const handleChange = (ev) => setIsAdmin(ev.target.checked);
 
 	const onSubmitHandler = (ev) => {
 		if (ev) ev.preventDefault();
@@ -22,11 +28,21 @@ export function LoginPage() {
 			password: password.value
 		};
 
-		login({ variables })
-			.then(({ error }) => {
-				if (error) throw error;
-			})
-			.catch(toast.error);
+		if (isAdmin) {
+			adminLogin({ variables })
+				.then(({ error }) => {
+					if (error) throw error;
+				})
+				.catch(err => toast.error(err.message))
+				.finally(() => authDispatch({ type: authActions.AUTHENTICATING, payload: false }));
+		} else {
+			userLogin({ variables })
+				.then(({ error }) => {
+					if (error) throw error;
+				})
+				.catch(err => toast.error(err.message))
+				.finally(() => authDispatch({ type: authActions.AUTHENTICATING, payload: false }));
+		}
 	};
 	return (
 		<div className='center-a-block'>
@@ -60,6 +76,18 @@ export function LoginPage() {
 							>
 								Login
 							</Button>
+						</Box>
+						<Box display='flex' alignItems='center' justifyContent='center' gap={3} marginTop={2}>
+							<Switch
+								checked={isAdmin}
+								onChange={handleChange}
+								inputProps={{ 'aria-label': 'controlled' }}
+							/>
+							<Typography
+								variant='body1'
+								color='InfoText'
+								children={isAdmin ? 'as Admin' : 'as User'}
+							/>
 						</Box>
 					</Box>
 				</Box>

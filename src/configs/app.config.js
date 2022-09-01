@@ -1,4 +1,6 @@
-const { REACT_APP_API_PROTOCOL: PROTOCOL, REACT_APP_API_HOST: HOST, NODE_ENV } = process.env;
+const { protocol, hostname } = window.location;
+
+const { PROTOCOL = protocol, HOST = hostname, NODE_ENV } = process.env;
 
 export const appHost = `${PROTOCOL}//${HOST}`;
 

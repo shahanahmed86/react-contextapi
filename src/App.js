@@ -12,12 +12,19 @@ import { SESSION_EXPIRED } from './graphql/common.graphql';
 import { toast } from 'react-toastify';
 
 function App() {
-	const { authDispatch, me, loggedIn, isAuthenticated, lastNavigatedScreen, authenticating } =
-		useContext(authContext);
+	const {
+		authDispatch,
+		me,
+		adminLoggedIn,
+		userLoggedIn,
+		isAuthenticated,
+		lastNavigatedScreen,
+		authenticating
+	} = useContext(authContext);
 
 	useSubscription(SESSION_EXPIRED, {
 		skip: !storage.getData(storage.tokenKey),
-		variables: { token: storage.getData(storage.tokenKey) },
+		variables: { token: storage.getData(storage.tokenKey)?.token },
 		onSubscriptionData: (result) => {
 			const { success, message } = result.subscriptionData.data.data;
 
@@ -36,9 +43,10 @@ function App() {
 
 		if (!me && storedData) {
 			setLoading(true);
-			loggedIn().then(() => setLoading(false));
+			if (storedData.isAdmin) adminLoggedIn().then(() => setLoading(false));
+			else userLoggedIn().then(() => setLoading(false));
 		}
-	}, [loggedIn, me, authDispatch]);
+	}, [adminLoggedIn, userLoggedIn, me, authDispatch]);
 
 	useEffect(() => {
 		if (authenticating) return;
